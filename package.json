@@ -1,0 +1,15 @@
+{
+  "name": "openai-node",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "chat": "node chat.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "openai": "^3.1.0"
+  }
+}
