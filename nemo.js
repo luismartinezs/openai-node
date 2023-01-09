@@ -45,16 +45,16 @@ function cleanText(text) {
 }
 
 // a chatbot without any memory
-const fishbot = async () => {
-  console.log(`${BOT_NAME}: Welcome to fishbot! A chatbot with zero memory. Ask me anything! ctrl/cmd + C to quit.`);
+const nemo = async () => {
+  console.log(`${BOT_NAME}: Welcome to Nemo! A chatbot with zero memory. Ask me anything! ctrl/cmd + C to quit.`);
   while (true) {
     const userInput = await getUserInput('USER: ');
     const prompt = `USER: ${cleanText(userInput)}\n${BOT_NAME}:`
     const response = await gtp3Completion({ prompt, stop: [`${BOT_NAME}:`, 'USER:'], temperature: 0.2 })
     console.log(`${BOT_NAME}: ${response}`)
     const log = makeLog(`USER: ${cleanText(userInput)}`, `${BOT_NAME}: ${cleanText(response)}`);
-    await appendToFile('./logs', 'fishbot.txt', log);
+    await appendToFile('./logs', 'nemo.txt', log);
   }
 }
 
-fishbot()
+nemo()

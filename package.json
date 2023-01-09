@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "fish": "node fishbot.js"
+    "nemo": "node nemo.js"
   },
   "keywords": [],
   "author": "",
