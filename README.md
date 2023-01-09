@@ -2,6 +2,10 @@
 
 NodeJS scripts to interact with openai in different ways, mainly created as a way to challenge myself
 
+## Scripts
+
+- Fishbot: a quite dumb bot with zero memory, ask it anything.
+
 ## Dev tasks
 
 - [x] Create a script that sends an input and returns response
