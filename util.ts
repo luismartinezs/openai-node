@@ -44,9 +44,14 @@ async function getUserInput(question: string): Promise<string> {
   });
 }
 
+function cleanText(text: string): string {
+  return text.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 export {
   readFile,
   writeToFile,
   appendToFile,
-  getUserInput
+  getUserInput,
+  cleanText
 };

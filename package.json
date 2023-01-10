@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "nemo": "node dist/nemo.js",
+    "dalla": "node dist/dalla.js",
     "build": "tsc"
   },
   "keywords": [],
