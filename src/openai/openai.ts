@@ -1,11 +1,25 @@
 import { Configuration, OpenAIApi } from "openai";
 
-import { MODELS } from "./constants/models";
+import { MODELS } from "@/constants";
 
 const configuration: Configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai: OpenAIApi = new OpenAIApi(configuration);
+
+interface Gtp3CompletionOptions {
+  prompt: string;
+  stop?: string[];
+  temperature?: number;
+  user?: string;
+  model?: string;
+  max_tokens?: number;
+  top_p?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
+  echo?: boolean;
+  n?: number;
+}
 
 const defaultOpenaiOptions = {
   model: MODELS.babbage,
@@ -20,7 +34,7 @@ const defaultOpenaiOptions = {
   user: 'dev'
 }
 
-async function gtp3Completion(openaiOptions = {}): Promise<string | null> {
+async function gtp3Completion(openaiOptions: Gtp3CompletionOptions): Promise<string | null> {
   const options = { ...defaultOpenaiOptions, ...openaiOptions };
 
   try {

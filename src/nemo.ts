@@ -1,5 +1,6 @@
-import { gtp3Completion } from "./openai-utils";
-import { appendToFile, getUserInput, cleanText } from "./util";
+import 'module-alias/register';
+import { gtp3Completion } from "@/openai";
+import { appendToFile, getUserInput, cleanText } from "@/util";
 
 const BOT_NAME: string = 'NEMO'
 
