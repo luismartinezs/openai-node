@@ -12,6 +12,7 @@ NodeJS scripts to interact with openai in different ways, mainly created as a wa
 - [x] Create a script that sends an input and returns response
 - [x] Convert to typescript
 - [x] Dalla: give a random prompt for AI art generation
-- [ ] Apply chatGPT refactoring suggestions https://chat.openai.com/chat/c9dca837-d369-464a-875f-808eabcd8aaa
+- [x] Apply chatGPT refactoring suggestions
 - [ ] It prepends the history (up to a prompt + character limit) to the input and sends it
 - [ ] It keeps a summary of the history (up to a limit) and prepends it to input
+- [ ] It searches related history entries using embedding and prepends it to prompt
