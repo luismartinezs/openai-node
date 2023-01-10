@@ -5,6 +5,6 @@ const MODELS = {
   ada: "text-ada-001",
 };
 
-module.exports = {
-  MODELS,
-};
+export {
+  MODELS
+}
