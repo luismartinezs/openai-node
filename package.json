@@ -7,7 +7,6 @@
     "nemo": "node dist/nemo.js",
     "dalla": "node dist/dalla.js",
     "hal": "node dist/hal.js",
-    "build": "trash dist && tsc",
     "swc": "trash dist && swc src --out-dir dist"
   },
   "keywords": [],

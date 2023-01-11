@@ -6,6 +6,7 @@ NodeJS scripts to interact with openai in different ways, mainly created as a wa
 
 - Nemo: a quite dumb bot with zero memory, ask it anything.
 - Dalla: a prompt generator for ai image generation such as Midjourney. It uses the davinci model because cheaper models won't work at all.
+- Hal: a bot with short memory (it remembers up to the last 10 answers). Quitting will reset the memory.
 
 ## Dev tasks
 
@@ -18,3 +19,10 @@ NodeJS scripts to interact with openai in different ways, mainly created as a wa
   - [ ] Function that builds the prompt from history and current input
 - [ ] It keeps a summary of the history (up to a limit) and prepends it to input
 - [ ] It searches related history entries using embedding and prepends it to prompt
+- [ ] Add eslint and prettier
+
+### Hal
+
+- The bot keeps track of the last 5 answers
+- The answers are stored in-memory in an array
+- The initial prompt (bot definition) is always included
