@@ -3,7 +3,8 @@ import {
   writeToFile,
   appendToFile,
   getUserInput,
-  cleanText
+  cleanText,
+  getTimestamp
 } from './util'
 
 export {
@@ -11,5 +12,6 @@ export {
   writeToFile,
   appendToFile,
   getUserInput,
-  cleanText
+  cleanText,
+  getTimestamp
 }

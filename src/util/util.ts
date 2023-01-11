@@ -1,5 +1,5 @@
-import fs from 'fs';
-import readline from 'readline';
+const fs = require('fs');
+const readline = require('readline');
 
 async function readFile(path: string): Promise<string | null> {
   try {
@@ -31,7 +31,7 @@ async function appendToFile(path: string, filename: string, data: string): Promi
 
 
 async function getUserInput(question: string): Promise<string> {
-  const rl: readline.ReadLine = readline.createInterface({
+  const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
@@ -48,10 +48,16 @@ function cleanText(text: string): string {
   return text.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+function getTimestamp() {
+  const date: Date = new Date();
+  return date.toISOString().replace(/[-T:]/g, '').replace(/\..+/, '')
+}
+
 export {
   readFile,
   writeToFile,
   appendToFile,
   getUserInput,
-  cleanText
+  cleanText,
+  getTimestamp
 };

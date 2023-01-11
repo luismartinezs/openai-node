@@ -6,7 +6,9 @@
   "scripts": {
     "nemo": "node dist/nemo.js",
     "dalla": "node dist/dalla.js",
-    "build": "tsc"
+    "hal": "node dist/hal.js",
+    "build": "trash dist && tsc",
+    "swc": "trash dist && swc src --out-dir dist"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +18,8 @@
     "openai": "^3.1.0"
   },
   "devDependencies": {
+    "@swc/cli": "^0.1.59",
+    "@swc/core": "^1.3.25",
     "@types/node": "^18.11.18",
     "typescript": "^4.9.4"
   },
