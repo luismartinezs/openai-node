@@ -7,7 +7,9 @@
     "nemo": "node dist/nemo.js",
     "dalla": "node dist/dalla.js",
     "hal": "node dist/hal.js",
-    "swc": "trash dist && swc src --out-dir dist"
+    "clean": "trash dist",
+    "prebuild": "pnpm clean",
+    "build": "swc src --out-dir dist"
   },
   "keywords": [],
   "author": "",

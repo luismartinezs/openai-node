@@ -1,28 +1,10 @@
 import 'module-alias/register';
 import { gtp3Completion } from "@/openai";
-import { appendToFile, getUserInput, cleanText, getTimestamp, readFile } from "@/util";
+import { appendToFile, getUserInput, cleanText, getTimestamp, readFile, makeLog } from "@/util";
 
 const BOT_NAME: string = 'HAL'
 const conversation: string[] = []
 const fileName = `hal-${getTimestamp()}.txt`
-
-type MakeLog = {
-  prompt?: string,
-  response?: string
-}
-
-function makeLog({ prompt, response }: MakeLog): string {
-  let log = ''
-
-  if (prompt) {
-    log += `${cleanText(prompt)}\n`
-  }
-  if (response) {
-    log += `${cleanText(response)}\n`
-  }
-
-  return log;
-}
 
 const hal = async (): Promise<void> => {
   console.log(`${BOT_NAME}: Welcome to ${BOT_NAME}! A chatbot with limited memory. Ask anything! ctrl/cmd + C to quit.\n`);

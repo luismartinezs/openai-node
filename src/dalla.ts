@@ -5,7 +5,7 @@ import { readFile, appendToFile } from "./util/util";
 const BOT_NAME = "DALLA";
 
 async function getPrompt(): Promise<string> {
-  const prompt = await readFile("@/prompts/dallxa.txt");
+  const prompt = await readFile("./prompts/dalla.txt");
   if (!prompt) {
     throw new Error(`There was an error getting the prompt`);
   }
@@ -36,7 +36,7 @@ const dalla = async (): Promise<void> => {
     return;
   }
   console.log(`${BOT_NAME}: ${response}`);
-  await appendToFile("./logs", "dalla.txt", response);
+  await appendToFile("./logs", "dalla.txt", `\n\n${response}`);
 };
 
 dalla();

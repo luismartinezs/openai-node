@@ -11,7 +11,10 @@
     },
     "target": "es2018",
     "keepClassNames": true,
-    "loose": true
+    "loose": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "module": {
     "type": "commonjs",

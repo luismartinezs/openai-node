@@ -1,12 +1,8 @@
 import 'module-alias/register';
 import { gtp3Completion } from "@/openai";
-import { appendToFile, getUserInput, cleanText } from "@/util";
+import { appendToFile, getUserInput, cleanText, makeLog } from "@/util";
 
 const BOT_NAME: string = 'NEMO'
-
-function makeLog(prompt: string, response: string): string {
-  return `${cleanText(prompt)}\n${cleanText(response)}\n`;
-}
 
 const nemo = async (): Promise<void> => {
   console.log(`${BOT_NAME}: Welcome to Nemo! A chatbot with zero memory. Ask me anything! ctrl/cmd + C to quit.`);
@@ -30,7 +26,7 @@ const handleConversation = async (): Promise<void> => {
 }
 
 const logConversation = async (userInput: string, botResponse: string): Promise<void> => {
-  const log: string = makeLog(`USER: ${cleanText(userInput)}`, `${BOT_NAME}: ${cleanText(botResponse)}`);
+  const log: string = makeLog({ prompt: `USER: ${cleanText(userInput)}`, response: `${BOT_NAME}: ${cleanText(botResponse)}` });
   await appendToFile('./logs', 'nemo.txt', log);
 }
 

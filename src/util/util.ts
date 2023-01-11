@@ -53,11 +53,29 @@ function getTimestamp() {
   return date.toISOString().replace(/[-T:]/g, '').replace(/\..+/, '')
 }
 
+function makeLog({ prompt, response }: {
+  prompt?: string,
+  response?: string
+}): string {
+  let log = ''
+
+  if (prompt) {
+    log += `${cleanText(prompt)}\n`
+  }
+  if (response) {
+    log += `${cleanText(response)}\n`
+  }
+
+  return log;
+}
+
+
 export {
   readFile,
   writeToFile,
   appendToFile,
   getUserInput,
   cleanText,
-  getTimestamp
+  getTimestamp,
+  makeLog
 };

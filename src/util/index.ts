@@ -4,7 +4,8 @@ import {
   appendToFile,
   getUserInput,
   cleanText,
-  getTimestamp
+  getTimestamp,
+  makeLog
 } from './util'
 
 export {
@@ -13,5 +14,6 @@ export {
   appendToFile,
   getUserInput,
   cleanText,
-  getTimestamp
+  getTimestamp,
+  makeLog
 }
