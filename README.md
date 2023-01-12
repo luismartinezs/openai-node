@@ -15,7 +15,7 @@ NodeJS scripts to interact with openai in different ways, mainly created as a wa
 - [x] Dalla: give a random prompt for AI art generation
 - [x] Apply chatGPT refactoring suggestions
 - [x] It prepends the history (up to a prompt + character limit) to the input and sends it
-- [ ] Add eslint and prettier
+- [x] Add eslint and prettier
 - [ ] It keeps a summary of the history and prepends it to input
 - [ ] It searches related history entries using embedding and prepends it to prompt
 - [ ] friend: choose either of the last two, but saves convo in a file and when quitting and restarting, it remembers
