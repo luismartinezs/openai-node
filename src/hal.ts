@@ -2,7 +2,7 @@ import 'module-alias/register';
 import { gtp3Completion } from "@/openai";
 import { appendToFile, getUserInput, cleanText, getTimestamp, readFile, makeLog } from "@/util";
 
-const BOT_NAME: string = 'HAL'
+const BOT_NAME = 'HAL'
 const conversation: string[] = []
 const fileName = `hal-${getTimestamp()}.txt`
 
@@ -13,6 +13,7 @@ const hal = async (): Promise<void> => {
     await appendToFile('./logs/hal', fileName, initialPrompt);
   }
 
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     await handleConversation();
   }

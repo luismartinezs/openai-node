@@ -9,7 +9,8 @@
     "hal": "node dist/hal.js",
     "clean": "trash dist",
     "prebuild": "pnpm clean",
-    "build": "swc src --out-dir dist"
+    "build": "swc src --out-dir dist",
+    "lint": "eslint src --ext .ts"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +23,9 @@
     "@swc/cli": "^0.1.59",
     "@swc/core": "^1.3.25",
     "@types/node": "^18.11.18",
+    "@typescript-eslint/eslint-plugin": "^5.48.1",
+    "@typescript-eslint/parser": "^5.48.1",
+    "eslint": "^8.31.0",
     "typescript": "^4.9.4"
   },
   "_moduleAliases": {

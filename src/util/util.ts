@@ -13,7 +13,7 @@ async function readFile(path: string): Promise<string | null> {
 
 async function writeToFile(path: string, filename: string, data: string): Promise<void> {
   try {
-    const newPath: string = `${path}/${filename}`;
+    const newPath = `${path}/${filename}`;
     fs.writeFileSync(newPath, data);
   } catch (err) {
     console.error(err);
@@ -22,7 +22,7 @@ async function writeToFile(path: string, filename: string, data: string): Promis
 
 async function appendToFile(path: string, filename: string, data: string): Promise<void> {
   try {
-    const newPath: string = `${path}/${filename}`;
+    const newPath = `${path}/${filename}`;
     fs.appendFileSync(newPath, data);
   } catch (err) {
     console.error(err);

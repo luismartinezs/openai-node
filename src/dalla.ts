@@ -27,12 +27,12 @@ const dalla = async (): Promise<void> => {
     if (err instanceof Error) {
       console.error(`${BOT_NAME}: ${err.message}`);
     } else {
-      console.error(`${BOT_NAME}: I\'m sorry, I don\'t understand.`)
+      console.error(`${BOT_NAME}: I'm sorry, I don't understand.`)
     }
   }
 
   if (!response) {
-    console.log(`${BOT_NAME}: I\'m sorry, I don\'t understand.`);
+    console.log(`${BOT_NAME}: I'm sorry, I don't understand.`);
     return;
   }
   console.log(`${BOT_NAME}: ${response}`);

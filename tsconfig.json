@@ -13,5 +13,7 @@
       "@/*": ["./src/*"]
     }
   },
-  "lib": ["es2015"]
+  "lib": ["es2015"],
+  "include": ["src"],
+  "exclude": ["node_modules"]
 }

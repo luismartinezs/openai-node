@@ -2,7 +2,7 @@ import 'module-alias/register';
 import { gtp3Completion } from "@/openai";
 import { appendToFile, getUserInput, cleanText, makeLog } from "@/util";
 
-const BOT_NAME: string = 'NEMO'
+const BOT_NAME = 'NEMO'
 
 const nemo = async (): Promise<void> => {
   console.log(`${BOT_NAME}: Welcome to Nemo! A chatbot with zero memory. Ask me anything! ctrl/cmd + C to quit.`);
