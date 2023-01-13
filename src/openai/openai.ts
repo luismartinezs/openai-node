@@ -48,5 +48,5 @@ async function gtp3Completion(openaiOptions: Gtp3CompletionOptions): Promise<str
 }
 
 export {
-  gtp3Completion
+  gtp3Completion,
 }

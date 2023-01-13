@@ -7,6 +7,7 @@
     "nemo": "node dist/nemo.js",
     "dalla": "node dist/dalla.js",
     "hal": "node dist/hal.js",
+    "dot": "node dist/dot.js",
     "clean": "trash dist",
     "prebuild": "pnpm clean",
     "build": "swc src --out-dir dist",
