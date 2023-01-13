@@ -1,7 +1,9 @@
 import { gtp3Completion } from './openai'
-import { summarize } from './util'
+import { summarize, composePrompt, estimateTokenLength } from './util'
 
 export {
   gtp3Completion,
-  summarize
+  summarize,
+  composePrompt,
+  estimateTokenLength
 }

@@ -5,7 +5,8 @@ import {
   getUserInput,
   cleanText,
   getTimestamp,
-  makeLog
+  makeLog,
+  debugLog
 } from './util'
 
 export {
@@ -15,5 +16,6 @@ export {
   getUserInput,
   cleanText,
   getTimestamp,
-  makeLog
+  makeLog,
+  debugLog
 }

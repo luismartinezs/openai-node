@@ -70,6 +70,18 @@ function makeLog({ prompt, response }: {
 }
 
 
+function debugLog(logs: { label: string, block: any }[]) {
+  const thickHr = '==============='
+  const hr = '------------'
+  console.log(`${thickHr}DEBUG LOG${thickHr}`)
+  logs.forEach(({ label, block }) => {
+    console.log(`${hr}${label}${hr}`)
+    console.log(block)
+  })
+  console.log(`${thickHr}DEBUG LOG END${thickHr}`)
+}
+
+
 export {
   readFile,
   writeToFile,
@@ -77,5 +89,6 @@ export {
   getUserInput,
   cleanText,
   getTimestamp,
-  makeLog
+  makeLog,
+  debugLog
 };

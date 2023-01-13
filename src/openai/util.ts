@@ -3,8 +3,8 @@ import 'module-alias/register';
 import { MODELS } from "@/constants"
 import { gtp3Completion } from "./openai"
 
-function composePrompt(blocks: string[], separator: string): string {
-  return blocks.join(separator)
+function composePrompt(blocks: string[], separator = '\n\n'): string {
+  return blocks.filter(Boolean).join(separator)
 }
 
 async function summarize(input: string): Promise<string> {
@@ -15,6 +15,12 @@ async function summarize(input: string): Promise<string> {
   return summary || ''
 }
 
+function estimateTokenLength(input: string): number {
+  return Math.round((input.replace(/\s/g, '').length) / 4)
+}
+
 export {
-  summarize
+  summarize,
+  composePrompt,
+  estimateTokenLength
 }

@@ -34,8 +34,21 @@ const defaultOpenaiOptions = {
   user: 'dev'
 }
 
-async function gtp3Completion(openaiOptions: Gtp3CompletionOptions): Promise<string | null> {
+interface OtherOptions {
+  mock?: boolean
+}
+
+const defaultOtherOptions = {
+  mock: false
+}
+
+async function gtp3Completion(openaiOptions: Gtp3CompletionOptions, otherOptions: OtherOptions = {}): Promise<string | null> {
   const options = { ...defaultOpenaiOptions, ...openaiOptions };
+  const { mock } = { ...defaultOtherOptions, ...otherOptions };
+
+  if (mock) {
+    return 'This is a mock response.'
+  }
 
   try {
     const completion = await openai.createCompletion(options);
