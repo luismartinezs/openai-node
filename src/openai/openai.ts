@@ -7,7 +7,7 @@ const configuration: Configuration = new Configuration({
 });
 const openai: OpenAIApi = new OpenAIApi(configuration);
 
-interface Gtp3CompletionOptions {
+export interface Gtp3CompletionOptions {
   prompt: string;
   stop?: string[];
   temperature?: number;

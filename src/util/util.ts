@@ -70,15 +70,15 @@ function makeLog({ prompt, response }: {
 }
 
 
-function debugLog(logs: { label: string, block: any }[]) {
+function debugLog(logs: { label: string, block: any }[], log = console.log) {
   const thickHr = '==============='
   const hr = '------------'
-  console.log(`${thickHr}DEBUG LOG${thickHr}`)
+  log(`${thickHr}DEBUG LOG${thickHr}`)
   logs.forEach(({ label, block }) => {
-    console.log(`${hr}${label}${hr}`)
-    console.log(block)
+    log(`${hr}${label}${hr}`)
+    log(block)
   })
-  console.log(`${thickHr}DEBUG LOG END${thickHr}`)
+  log(`${thickHr}DEBUG LOG END${thickHr}`)
 }
 
 

@@ -1,16 +1,16 @@
 import 'module-alias/register';
 
 import { MODELS } from "@/constants"
-import { gtp3Completion } from "./openai"
+import { gtp3Completion, type Gtp3CompletionOptions } from "./openai"
 
 function composePrompt(blocks: string[], separator = '\n\n'): string {
   return blocks.filter(Boolean).join(separator)
 }
 
-async function summarize(input: string): Promise<string> {
-  const prompt = composePrompt(['Write a detailed summary of the following:', input, 'DETAILED SUMMARY:'], '\n\n')
+async function summarize(input: string, options: Partial<Gtp3CompletionOptions> = {}): Promise<string> {
+  const prompt = composePrompt(['Compress and summarize the information in the following text, trying to keep a small word count. Include all the different topics in the summary. Include any personal details:', input, 'DETAILED SUMMARY:'], '\n\n')
 
-  const summary = await gtp3Completion({ prompt, stop: ['<<END>>'], model: MODELS.curie, temperature: 0.2, max_tokens: 1200 })
+  const summary = await gtp3Completion({ prompt, stop: ['<<END>>'], model: MODELS.curie, temperature: 0.2, max_tokens: 1200, ...options })
 
   return summary || ''
 }
