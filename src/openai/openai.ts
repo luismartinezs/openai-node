@@ -1,6 +1,6 @@
 import { Configuration, OpenAIApi } from "openai";
 
-import { MODELS } from "@/constants";
+import { models } from "@/constants";
 
 const configuration: Configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -22,7 +22,7 @@ export interface Gtp3CompletionOptions {
 }
 
 const defaultOpenaiOptions = {
-  model: MODELS.babbage,
+  model: models.babbage,
   max_tokens: 400,
   temperature: 1,
   top_p: 1,
@@ -31,35 +31,36 @@ const defaultOpenaiOptions = {
   stop: ["\n"],
   echo: false,
   n: 1,
-  user: 'dev'
-}
+  user: "dev",
+};
 
 interface OtherOptions {
-  mock?: boolean
+  mock?: boolean;
 }
 
 const defaultOtherOptions = {
-  mock: false
-}
+  mock: false,
+};
 
-async function gtp3Completion(openaiOptions: Gtp3CompletionOptions, otherOptions: OtherOptions = {}): Promise<string | null> {
+async function gtp3Completion(
+  openaiOptions: Gtp3CompletionOptions,
+  otherOptions: OtherOptions = {}
+): Promise<string | null> {
   const options = { ...defaultOpenaiOptions, ...openaiOptions };
   const { mock } = { ...defaultOtherOptions, ...otherOptions };
 
   if (mock) {
-    return 'This is a mock response.'
+    return "This is a mock response.";
   }
 
   try {
     const completion = await openai.createCompletion(options);
 
-    return completion?.data?.choices[0]?.text?.trim() || null
+    return completion?.data?.choices[0]?.text?.trim() || null;
   } catch (err) {
     console.error(err);
   }
-  return null
+  return null;
 }
 
-export {
-  gtp3Completion,
-}
+export { gtp3Completion };

@@ -1,6 +1,6 @@
 import "module-alias/register";
 
-import { MODELS } from "@/constants";
+import { models } from "@/constants";
 import { gtp3Completion, type Gtp3CompletionOptions } from "./openai";
 
 function composePrompt(blocks: string[], separator = "\n\n"): string {
@@ -21,7 +21,7 @@ async function summarize(
 
   const defaultGtp3CompletionOptions = {
     stop: ["<<END>>"],
-    model: MODELS.curie,
+    model: models.curie,
     temperature: 0.2,
     max_tokens: 1200,
   };

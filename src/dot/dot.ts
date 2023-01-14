@@ -17,184 +17,249 @@ import {
   readFile,
   debugLog,
   useState,
+  getTimestamp,
 } from "@/util";
+import { type ModelTypes, models } from "@/constants";
 
-import {
-  BOT_NAME,
-  BOT_MODEL,
-  FILENAME,
-  LAST_CONVO_MEMORY,
-  MAX_CURRENT_CONVO_TOKEN_LENGTH,
-  MOCK,
-  SUMMARY_MAX_TOKENS,
-  SUMMARIZE_SUMMARY,
-  SUMMARIZATION_MODEL,
-  debugOptions,
-} from "./config";
-import { getConvoToSummarize, getUnsummarizedConvo } from "./util";
-
-// Convo variables
-const [conversation, setConversation] = useState<string[]>([]);
-const [summary, setSummary] = useState("");
-const [summarizedConvoIndex, setSummarizedConvoIndex] = useState(0); // up to what index convo was summarized so far
-
-type SummaryOptions = {
-  mock?: boolean;
+type DotConfig = {
+  botName: string;
+  filename: string;
+  maxCurrentConvoTokenLength: number;
+  lastConvoMemory: number;
+  summarizeSummary: boolean;
+  summaryMaxTokens: number;
+  botModel: ModelTypes;
+  summarizationModel: ModelTypes;
+  mock: boolean;
+  debugOptions: {
+    toConsole: boolean;
+    toFile: boolean;
+  };
 };
 
-async function handleSummary(options: SummaryOptions = {}) {
-  const defaultOptions = {
+/**
+ *
+ * dot config:
+ *
+ * maxCurrentConvoTokenLength: if conversation is longer than this, summarize it (except last LAST_CONVO_MEMORY messages)
+ *
+ * lastConvoMemory: how many messages from convo ALWAYS prepend to prompt
+ *
+ * summarizeSummary: if true, summarize the summary and the last lastConvoMemory-th messages. If false, only summarize the last lastConvoMemory-th messages AND append to existing summary. Setting it to false will make the summary longer and longer, so for now set it to true
+ *
+ * summaryMaxTokens: max tokens for summary, should probably be smaller or equal to maxCurrentConvoTokenLength
+ *
+ * botModel: model for bot
+ *
+ * summarizationModel: model for summarization, maybe you can get away with using a cheaper model for summarization than for the bot and still have things work decently
+ *
+ * mock: if true, don't call openai api
+ *
+ * debugOptions: {
+ *  toConsole: if true, log debug info to console
+ *  toFile: if true, log debug info to file
+ * }
+ */
+function dot(config: Partial<DotConfig> = {}) {
+  // config
+  const defaultConfig = {
+    botName: "DOT",
+    filename: `dot-${getTimestamp()}.txt`,
+    maxCurrentConvoTokenLength: 1000,
+    lastConvoMemory: 4,
+    summarizeSummary: true,
+    summaryMaxTokens: 800,
+    botModel: models.davinci,
+    summarizationModel: models.curie,
     mock: false,
+    debugOptions: {
+      toConsole: false,
+      toFile: false,
+    },
   };
 
-  const { mock } = { ...defaultOptions, ...options };
+  const debugOptions = {
+    ...defaultConfig.debugOptions,
+    ...config.debugOptions,
+  };
 
-  const convoToSummarize = getConvoToSummarize(
-    conversation,
-    summarizedConvoIndex,
-    LAST_CONVO_MEMORY
-  );
+  const {
+    botName,
+    filename,
+    maxCurrentConvoTokenLength,
+    lastConvoMemory,
+    summarizeSummary,
+    summaryMaxTokens,
+    botModel,
+    summarizationModel,
+    mock,
+  } = { ...defaultConfig, ...config };
 
-  if (
-    estimateTokenLength(convoToSummarize.join("")) >
-    MAX_CURRENT_CONVO_TOKEN_LENGTH
-  ) {
-    if (mock) {
-      setSummarizedConvoIndex(conversation.length - LAST_CONVO_MEMORY);
+  // state
+  const [conversation, setConversation] = useState<string[]>([]);
+  const [summary, setSummary] = useState("");
+  const [summarizedConvoIndex, setSummarizedConvoIndex] = useState(0); // up to what index convo was summarized so far
+
+  // getters (computed state)
+  function getConvoToSummarize() {
+    const startIndex = summarizedConvoIndex() - conversation().length - 1;
+    return conversation().slice(startIndex, -lastConvoMemory);
+  }
+
+  function getUnsummarizedConvo() {
+    const startIndex = summarizedConvoIndex() - conversation().length - 1;
+    return conversation().slice(startIndex);
+  }
+
+  function shouldSummarize() {
+    return (
+      estimateTokenLength(getConvoToSummarize().join("")) >
+      maxCurrentConvoTokenLength
+    );
+  }
+
+  // methods
+  function handleMockSummarize() {
+    setSummarizedConvoIndex(conversation().length - lastConvoMemory);
+    setSummary(
+      `This is a mock summary of the conversation from the start up to the ${summarizedConvoIndex()}th message`
+    );
+  }
+
+  async function handleSummary() {
+    if (shouldSummarize()) {
+      if (mock) {
+        handleMockSummarize();
+        return;
+      }
+
+      const summaryPrompt = `Conversation between USER and ${botName} (a bot)\n\n${
+        summarizeSummary
+          ? `${summary()}\n${getConvoToSummarize().join("\n")}`
+          : getConvoToSummarize().join("\n")
+      }`;
+
+      const _newSummary = await summarize(summaryPrompt, {
+        max_tokens: summaryMaxTokens,
+        model: summarizationModel,
+      });
       setSummary(
-        `This is a mock summary of the conversation from the start up to the ${summarizedConvoIndex}th message`
+        summarizeSummary ? _newSummary : `${summary()}\n${_newSummary}`
       );
+      setSummarizedConvoIndex(conversation().length - lastConvoMemory);
+    }
+  }
+
+  async function logConversationToFile(
+    userInput: string,
+    botResponse: string
+  ): Promise<void> {
+    const log: string = makeLog({
+      prompt: `USER: ${cleanText(userInput)}`,
+      response: `${botName}: ${cleanText(botResponse)}`,
+    });
+    await appendToFile(`./logs/${botName.toLowerCase()}`, filename, log);
+  }
+
+  function debug(prompt: string) {
+    const args = [
+      {
+        label: "prompt",
+        block: prompt,
+      },
+      {
+        label: "convo",
+        block: conversation(),
+      },
+      {
+        label: "unsummarized convo",
+        block: getUnsummarizedConvo(),
+      },
+      {
+        label: "convo to summarize",
+        block: getConvoToSummarize(),
+      },
+      {
+        label: "convo to summarize token length",
+        block: estimateTokenLength(getConvoToSummarize().join("")),
+      },
+      { label: "summary", block: summary() },
+    ];
+    if (debugOptions.toConsole) {
+      debugLog(args);
+    }
+    if (debugOptions.toFile) {
+      debugLog(args, (log) =>
+        appendToFile(
+          `./logs/${botName.toLowerCase()}`,
+          `debug-${filename}`,
+          `\n${log}\n`
+        )
+      );
+    }
+  }
+
+  async function handleConversation() {
+    console.log("\n");
+    const userInput = await getUserInput("USER: ");
+
+    const initPrompt = await readFile("./prompts/dot.txt");
+
+    if (!initPrompt) {
+      console.error("Could not read init prompt");
       return;
     }
 
-    const _toSummarize = SUMMARIZE_SUMMARY
-      ? `${summary}\n${convoToSummarize.join("\n")}`
-      : convoToSummarize.join("\n");
+    await handleSummary();
 
-    const _newSummary = await summarize(
-      `Conversation between USER and ${BOT_NAME} (a bot)\n\n${_toSummarize}`,
-      { max_tokens: SUMMARY_MAX_TOKENS, model: SUMMARIZATION_MODEL }
+    const lastConvo = conversation().slice(-lastConvoMemory).join("\n\n");
+
+    const prompt = composePrompt(
+      [initPrompt, summary(), lastConvo, `USER: ${userInput}`, `${botName}: `],
+      "\n\n"
     );
-    setSummary(SUMMARIZE_SUMMARY ? _newSummary : `${summary}\n${_newSummary}`);
-    setSummarizedConvoIndex(conversation.length - LAST_CONVO_MEMORY);
-  }
-}
 
-async function logConversation(
-  userInput: string,
-  botResponse: string
-): Promise<void> {
-  const log: string = makeLog({
-    prompt: `USER: ${cleanText(userInput)}\n`,
-    response: `${BOT_NAME}: ${cleanText(botResponse)}\n`,
-  });
-  await appendToFile(`./logs/${BOT_NAME.toLowerCase()}`, FILENAME, log);
-}
+    if (!prompt) {
+      console.error(`Invalid prompt`);
+      return;
+    }
 
-function debug({
-  prompt,
-  toConsole = false,
-  toFile = false,
-}: {
-  prompt: string;
-  toConsole?: boolean;
-  toFile?: boolean;
-}) {
-  const convoToSummarize = getConvoToSummarize(
-    conversation,
-    summarizedConvoIndex,
-    LAST_CONVO_MEMORY
-  );
-  const args = [
-    {
-      label: "prompt",
-      block: prompt,
-    },
-    {
-      label: "convo",
-      block: conversation,
-    },
-    {
-      label: "unsummarized convo",
-      block: getUnsummarizedConvo(conversation, summarizedConvoIndex),
-    },
-    {
-      label: "convo to summarize",
-      block: convoToSummarize,
-    },
-    {
-      label: "convo to summarize token length",
-      block: estimateTokenLength(convoToSummarize.join("")),
-    },
-    { label: "summary", block: summary },
-  ];
-  if (toConsole) {
-    debugLog(args);
-  }
-  if (toFile) {
-    debugLog(args, (log) =>
-      appendToFile(
-        `./logs/${BOT_NAME.toLowerCase()}`,
-        `debug-${FILENAME}`,
-        `\n${log}\n`
-      )
+    debug(prompt);
+
+    setConversation([...conversation(), `USER: ${userInput}`]);
+
+    const response = await gtp3Completion(
+      {
+        prompt,
+        stop: [`${botName}:`, "USER:"],
+        temperature: 0.7,
+        max_tokens: 400,
+        user: "dot-chatbot",
+        model: botModel,
+      },
+      { mock }
     );
+
+    if (!response) {
+      console.log(`\n\n${botName}: I'm sorry, I don't understand.`);
+      return;
+    }
+
+    console.log(`\n\n${botName}: ${response}`);
+    setConversation([...conversation(), `${botName}: ${response}`]);
+    logConversationToFile(userInput, response);
   }
+
+  async function init() {
+    while (true) {
+      await handleConversation();
+    }
+  }
+
+  return {
+    init,
+  };
 }
 
-async function handleConversation() {
-  const userInput = await getUserInput("USER: ");
-
-  const initPrompt = await readFile("./prompts/dot.txt");
-
-  if (!initPrompt) {
-    console.error("Could not read init prompt");
-    return;
-  }
-
-  await handleSummary({ mock: MOCK });
-
-  const lastConvo = conversation.slice(-LAST_CONVO_MEMORY).join("\n\n");
-
-  const prompt = composePrompt(
-    [initPrompt, summary, lastConvo, `USER: ${userInput}`, `${BOT_NAME}: `],
-    "\n\n"
-  );
-
-  if (!prompt) {
-    console.error(`Invalid prompt`);
-    return;
-  }
-
-  debug({ prompt, ...debugOptions });
-
-  setConversation([...conversation, `USER: ${userInput}`]);
-
-  const response = await gtp3Completion(
-    {
-      prompt,
-      stop: [`${BOT_NAME}:`, "USER:"],
-      temperature: 0.7,
-      max_tokens: 400,
-      user: "dot-chatbot",
-      model: BOT_MODEL,
-    },
-    { mock: MOCK }
-  );
-
-  if (!response) {
-    console.log(`${BOT_NAME}: I'm sorry, I don't understand.`);
-    return;
-  }
-
-  console.log(`${BOT_NAME}: ${response}`);
-  setConversation([...conversation, `${BOT_NAME}: ${response}`]);
-  logConversation(userInput, response);
-}
-
-export async function dot() {
-  // initialize conversation
-  while (true) {
-    await handleConversation();
-  }
-}
+export default dot;
+export { dot };

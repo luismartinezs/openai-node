@@ -1,3 +1,4 @@
-import { MODELS } from "./models"
+import { models } from "./models";
+import type { Models, ModelTypes } from "./models";
 
-export { MODELS }
+export { models, Models, ModelTypes };

@@ -1,4 +1,4 @@
-import { MODELS } from "@/constants";
+import { models } from "@/constants";
 import { gtp3Completion } from "@/openai";
 import { readFile, appendToFile } from "./util/util";
 
@@ -9,25 +9,25 @@ async function getPrompt(): Promise<string> {
   if (!prompt) {
     throw new Error(`There was an error getting the prompt`);
   }
-  return prompt
+  return prompt;
 }
 
 const dalla = async (): Promise<void> => {
-  const prompt = await getPrompt()
-  let response
+  const prompt = await getPrompt();
+  let response;
   try {
     response = await gtp3Completion({
       prompt: `${prompt}\n\n:`,
       stop: ["\n\n"],
       temperature: 0.9,
       user: "dalla-prompt-generator",
-      model: MODELS.davinci,
+      model: models.davinci,
     });
   } catch (err) {
     if (err instanceof Error) {
       console.error(`${BOT_NAME}: ${err.message}`);
     } else {
-      console.error(`${BOT_NAME}: I'm sorry, I don't understand.`)
+      console.error(`${BOT_NAME}: I'm sorry, I don't understand.`);
     }
   }
 
