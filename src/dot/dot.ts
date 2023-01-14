@@ -4,31 +4,34 @@
 import 'module-alias/register';
 
 import { composePrompt, estimateTokenLength, gtp3Completion, summarize } from "@/openai";
-import { appendToFile, cleanText, getTimestamp, getUserInput, makeLog, readFile, debugLog } from '@/util';
-import { MODELS } from '@/constants'
+import { appendToFile, cleanText, getUserInput, makeLog, readFile, debugLog, useState } from '@/util';
 
-const MOCK = false
+import {
+  BOT_NAME,
+  BOT_MODEL,
+  FILENAME,
+  LAST_CONVO_MEMORY,
+  MAX_CURRENT_CONVO_TOKEN_LENGTH,
+  MOCK,
+  SUMMARY_MAX_TOKENS,
+  SUMMARIZE_SUMMARY,
+  SUMMARIZATION_MODEL,
+  debugOptions
+} from './config'
 
-// Params
-const BOT_NAME = 'DOT'
-const FILENAME = `dot-${getTimestamp()}.txt`
-const MAX_CURRENT_CONVO_TOKEN_LENGTH = 100 // 1000 // if conversation is longer than this, summarize it (except last LAST_CONVO_MEMORY messages)
-const LAST_CONVO_MEMORY = 4 // how many messages from convo ALWAYS prepend to prompt
-const SUMMARIZE_SUMMARY = true // add previous summary to the part to summarize and refresh summary, otherwise just summarize the last messages and append to existing summary. Setting it to false will make the summary longer and longer, so for now set it to true
-const SUMMARY_MAX_TOKENS = 100 // 800 // max tokens for summary, should probably be smaller or equal to MAX_CURRENT_CONVO_TOKEN_LENGTH
-const BOT_MODEL = MODELS.curie
-const SUMMARIZATION_MODEL = MODELS.davinci
+// Convo variables
+const [conversation, setConversation] = useState<string[]>([])
+const [summary, setSummary] = useState('')
+const [summarizedConvoIndex, setSummarizedConvoIndex] = useState(0) // up to what index convo was summarized so far
 
-const conversation: string[] = []
-let summary = ''
-let summarizedConvoIndex = 0 // up to what index convo was summarized so far
-
-function getConvoToSummarize() {
-  return conversation.slice(summarizedConvoIndex - conversation.length - 1, -LAST_CONVO_MEMORY)
+function getConvoToSummarize(conversation: string[], _summarizedConvoIndex: number, lastConvoMemory: number) {
+  const startIndex = _summarizedConvoIndex - conversation.length - 1;
+  return conversation.slice(startIndex, -lastConvoMemory);
 }
 
-function getUnsummarizedConvo() {
-  return conversation.slice(summarizedConvoIndex - conversation.length - 1)
+function getUnsummarizedConvo(conversation: string[], _summarizedConvoIndex: number) {
+  const startIndex = _summarizedConvoIndex - conversation.length - 1;
+  return conversation.slice(startIndex);
 }
 
 type SummaryOptions = {
@@ -42,19 +45,21 @@ async function handleSummary(options: SummaryOptions = {}) {
 
   const { mock } = { ...defaultOptions, ...options }
 
-  if (estimateTokenLength(getConvoToSummarize().join('')) > MAX_CURRENT_CONVO_TOKEN_LENGTH) {
+  const convoToSummarize = getConvoToSummarize(conversation, summarizedConvoIndex, LAST_CONVO_MEMORY)
+
+  if (estimateTokenLength(convoToSummarize.join('')) > MAX_CURRENT_CONVO_TOKEN_LENGTH) {
 
     if (mock) {
-      summarizedConvoIndex = conversation.length - LAST_CONVO_MEMORY
-      summary = `This is a mock summary of the conversation from the start up to the ${summarizedConvoIndex}th message`
+      setSummarizedConvoIndex(conversation.length - LAST_CONVO_MEMORY)
+      setSummary(`This is a mock summary of the conversation from the start up to the ${summarizedConvoIndex}th message`)
       return
     }
 
-    const _toSummarize = SUMMARIZE_SUMMARY ? `${summary}\n${getConvoToSummarize().join('\n')}` : getConvoToSummarize().join('\n')
+    const _toSummarize = SUMMARIZE_SUMMARY ? `${summary}\n${convoToSummarize.join('\n')}` : convoToSummarize.join('\n')
 
     const _newSummary = await summarize(`Conversation between USER and ${BOT_NAME} (a bot)\n\n${_toSummarize}`, { max_tokens: SUMMARY_MAX_TOKENS, model: SUMMARIZATION_MODEL })
-    summary = SUMMARIZE_SUMMARY ? _newSummary : `${summary}\n${_newSummary}`
-    summarizedConvoIndex = conversation.length - LAST_CONVO_MEMORY
+    setSummary(SUMMARIZE_SUMMARY ? _newSummary : `${summary}\n${_newSummary}`)
+    setSummarizedConvoIndex(conversation.length - LAST_CONVO_MEMORY)
   }
 }
 
@@ -68,6 +73,7 @@ function debug({ prompt, toConsole = false, toFile = false }: {
   toConsole?: boolean;
   toFile?: boolean;
 }) {
+  const convoToSummarize = getConvoToSummarize(conversation, summarizedConvoIndex, LAST_CONVO_MEMORY)
   const args = [
     {
       label: 'prompt',
@@ -79,15 +85,15 @@ function debug({ prompt, toConsole = false, toFile = false }: {
     },
     {
       label: 'unsummarized convo',
-      block: getUnsummarizedConvo()
+      block: getUnsummarizedConvo(conversation, summarizedConvoIndex)
     },
     {
       label: 'convo to summarize',
-      block: getConvoToSummarize()
+      block: convoToSummarize
     },
     {
       label: 'convo to summarize token length',
-      block: estimateTokenLength(getConvoToSummarize().join(''))
+      block: estimateTokenLength(convoToSummarize.join(''))
     }
     ,
     { label: 'summary', block: summary }
@@ -121,9 +127,9 @@ async function handleConversation() {
     return;
   }
 
-  debug({ prompt, toConsole: false, toFile: true })
+  debug({ prompt, ...debugOptions })
 
-  conversation.push(`USER: ${userInput}`)
+  setConversation([...conversation, `USER: ${userInput}`])
 
   const response = await gtp3Completion({ prompt, stop: [`${BOT_NAME}:`, 'USER:'], temperature: 0.7, max_tokens: 400, user: 'dot-chatbot', model: BOT_MODEL }, { mock: MOCK });
 
@@ -133,15 +139,13 @@ async function handleConversation() {
   }
 
   console.log(`${BOT_NAME}: ${response}`);
-  conversation.push(`${BOT_NAME}: ${response}`)
+  setConversation([...conversation, `${BOT_NAME}: ${response}`])
   logConversation(userInput, response)
 }
 
-async function dot() {
+export async function dot() {
   // initialize conversation
   while (true) {
     await handleConversation();
   }
 }
-
-dot()

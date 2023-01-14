@@ -3,11 +3,11 @@ import {
   writeToFile,
   appendToFile,
   getUserInput,
-  cleanText,
   getTimestamp,
-  makeLog,
-  debugLog
-} from './util'
+} from "./util";
+import { makeLog, debugLog } from "./log";
+import { cleanText } from "./parse";
+import { useState } from './state'
 
 export {
   readFile,
@@ -17,5 +17,6 @@ export {
   cleanText,
   getTimestamp,
   makeLog,
-  debugLog
-}
+  debugLog,
+  useState
+};

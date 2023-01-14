@@ -29,7 +29,6 @@ async function appendToFile(path: string, filename: string, data: string): Promi
   }
 }
 
-
 async function getUserInput(question: string): Promise<string> {
   const rl = readline.createInterface({
     input: process.stdin,
@@ -44,51 +43,15 @@ async function getUserInput(question: string): Promise<string> {
   });
 }
 
-function cleanText(text: string): string {
-  return text.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
-}
-
 function getTimestamp() {
   const date: Date = new Date();
   return date.toISOString().replace(/[-T:]/g, '').replace(/\..+/, '')
 }
-
-function makeLog({ prompt, response }: {
-  prompt?: string,
-  response?: string
-}): string {
-  let log = ''
-
-  if (prompt) {
-    log += `${cleanText(prompt)}\n`
-  }
-  if (response) {
-    log += `${cleanText(response)}\n`
-  }
-
-  return log;
-}
-
-
-function debugLog(logs: { label: string, block: any }[], log = console.log) {
-  const thickHr = '==============='
-  const hr = '------------'
-  log(`${thickHr}DEBUG LOG${thickHr}`)
-  logs.forEach(({ label, block }) => {
-    log(`${hr}${label}${hr}`)
-    log(block)
-  })
-  log(`${thickHr}DEBUG LOG END${thickHr}`)
-}
-
 
 export {
   readFile,
   writeToFile,
   appendToFile,
   getUserInput,
-  cleanText,
   getTimestamp,
-  makeLog,
-  debugLog
 };
