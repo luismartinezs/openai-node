@@ -154,11 +154,15 @@ function dot(config: Partial<DotConfig> = {}) {
     userInput: string,
     botResponse: string
   ): Promise<void> {
-    const log: string = makeLog({
-      prompt: `USER: ${cleanText(userInput)}`,
-      response: `${botName}: ${cleanText(botResponse)}`,
-    });
-    await appendToFile(`./logs/${botName.toLowerCase()}`, filename, log);
+    try {
+      const log: string = makeLog({
+        prompt: `USER: ${cleanText(userInput)}`,
+        response: `${botName}: ${cleanText(botResponse)}`,
+      });
+      await appendToFile(`./logs/${botName.toLowerCase()}`, filename, log);
+    } catch (error) {
+      console.log("Error in logging conversation to file", error);
+    }
   }
 
   function debug(prompt: string) {

@@ -8,6 +8,7 @@
     "dalla": "node dist/dalla",
     "hal": "node dist/hal",
     "dot": "node dist/dot",
+    "oct": "node dist/oct",
     "clean": "trash dist",
     "prebuild": "pnpm clean",
     "build": "swc src --out-dir dist",

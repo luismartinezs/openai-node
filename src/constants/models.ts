@@ -3,6 +3,7 @@ const models = Object.freeze({
   curie: "text-curie-001",
   babbage: "text-babbage-001",
   ada: "text-ada-001",
+  adaEmbedding: "text-embedding-ada-002",
 });
 
 type Models = typeof models;
