@@ -25,3 +25,9 @@ NodeJS scripts to interact with openai in different ways, mainly created as a wa
 - The bot keeps track of the last 5 answers
 - The answers are stored in-memory in an array
 - The initial prompt (bot definition) is always included
+
+### Oct
+
+- Embeddings are stored as json array in a file (embeddings.json)
+- Each conversation has a different embeddings.json
+- Array elements are objects with content (input string) and embedding (array)

@@ -64,7 +64,7 @@ async function gtp3Completion(
 }
 
 interface Gpt3EmbeddingOptions {
-  input: string;
+  input: string | string[];
   model?: ModelTypes;
   user?: string;
 }
@@ -72,7 +72,7 @@ interface Gpt3EmbeddingOptions {
 async function gpt3Embedding(
   openaiOptions: Gpt3EmbeddingOptions,
   otherOptions: OtherOptions = {}
-): Promise<number[] | null> {
+): Promise<number[][] | null> {
   const defaultOpenaiOptions = {
     model: models.adaEmbedding,
     user: "dev",
@@ -82,12 +82,12 @@ async function gpt3Embedding(
   const { mock } = { ...defaultOtherOptions, ...otherOptions };
 
   if (mock) {
-    return [1, 2, 3, 4, 5];
+    return [[1, 2, 3, 4, 5]];
   }
   try {
     const embedding = await openai.createEmbedding(options);
 
-    return embedding?.data?.data[0]?.embedding || null;
+    return embedding?.data?.data.map((d) => d.embedding) || null;
   } catch (err) {
     console.error(err);
   }
