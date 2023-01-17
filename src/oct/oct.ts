@@ -136,11 +136,11 @@ function oct(config: Partial<OctConfig> = {}) {
       model: embeddingModel,
     });
     const info: TLog = {
-      speaker: userName,
-      time: Date.now(),
-      vector: inputVector,
-      message: userInput,
       uuid: uuid(),
+      time: Date.now(),
+      speaker: userName,
+      message: userInput,
+      vector: inputVector,
     };
     const filename = `log-${getTimestamp()}-${userName}.json`;
     saveJson<TLog>(pathName, filename, info);
@@ -166,11 +166,11 @@ function oct(config: Partial<OctConfig> = {}) {
     }
     const outputVector = await gpt3Embedding(output, { model: embeddingModel });
     const outputInfo: TLog = {
-      speaker: botName,
-      time: Date.now(),
-      vector: outputVector,
-      message: output,
       uuid: uuid(),
+      time: Date.now(),
+      speaker: botName,
+      message: output,
+      vector: outputVector,
     };
     const outputFilename = `log-${getTimestamp()}-${botName}.json`;
     saveJson<TLog>(pathName, outputFilename, outputInfo);
