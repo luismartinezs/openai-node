@@ -2,13 +2,31 @@
 
 NodeJS scripts to interact with openai in different ways, mainly created as a way to challenge myself
 
+Note: this is work in progress and mostly me playing around with the openai API
+
+## Usage
+
+- Install node in your local machine
+- `cp .env.example .env` and paste your openai API key to the `.env` file
+
+```bash
+pnpm i # Install dependencies
+pnpm build # you'll need to run this every time you change the code
+# Run any of the bots
+pnpm nemo
+pnpm dalla
+pnpm hal
+pnpm dot
+pnpm oct
+```
+
 ## Bots
 
-- Nemo: a quite dumb bot with zero memory, ask it anything.
-- Dalla: a prompt generator for ai image generation such as Midjourney. It uses the davinci model because cheaper models won't work at all.
+- Nemo: a very dumb bot with zero memory, ask it anything.
+- Dalla: a prompt generator for ai image generation tools such as Midjourney. It uses the davinci model because cheaper models won't work at all.
 - Hal: a bot with short memory (it remembers up to the last 10 answers). Quitting will reset the memory.
-- Dot: bot with memory (it remembers the last 4 answers and a summary of the rest of the conversation).
-- Oct: Long term memory bot, it uses embeddings.
+- Dot: bot with limited memory (it remembers the last 4 answers and a summary of the rest of the conversation). Quitting will reset the memory.
+- Oct: Long term memory bot, it uses embeddings and summarization to include info related to the current prompt. Quitting does NOT reset the memory. Pretty much [LongtermChatExternalSources repo](https://github.com/daveshap/LongtermChatExternalSources) converted to NodeJS
 
 ## Dev tasks
 
@@ -20,9 +38,4 @@ NodeJS scripts to interact with openai in different ways, mainly created as a wa
 - [x] Add eslint and prettier
 - [x] It keeps a summary of the history and prepends it to input
 - [x] It searches related history entries using embedding and prepends it to prompt, it saves embeddings to log so it's persistent
-
-### Hal
-
-- The bot keeps track of the last 5 answers
-- The answers are stored in-memory in an array
-- The initial prompt (bot definition) is always included
+- [ ] Refactoring, cleanup
