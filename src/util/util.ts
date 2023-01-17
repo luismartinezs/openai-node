@@ -1,6 +1,21 @@
 const fs = require("fs");
 const readline = require("readline");
 
+function createFolderIfNotExist(path: string) {
+  if (!fs.existsSync(path)) {
+    fs.mkdirSync(path, { recursive: true });
+  }
+}
+
+function createFileIfNotExist(path: string, filename: string) {
+  createFolderIfNotExist(path);
+
+  const newPath = `${path}/${filename}`;
+  if (!fs.existsSync(newPath)) {
+    fs.writeFileSync(newPath, "[]");
+  }
+}
+
 async function readFile(path: string): Promise<string | null> {
   try {
     const data: string = fs.readFileSync(path, "utf8");
@@ -11,14 +26,26 @@ async function readFile(path: string): Promise<string | null> {
   return null;
 }
 
-async function writeToFile(
+function writeToFile(path: string, filename: string, data: string): void {
+  try {
+    createFolderIfNotExist(path);
+    const newPath = `${path}/${filename}`;
+    fs.writeFileSync(newPath, data);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function saveJson<Data>(
   path: string,
   filename: string,
-  data: string
+  data: Data
 ): Promise<void> {
   try {
     const newPath = `${path}/${filename}`;
-    fs.writeFileSync(newPath, data);
+
+    createFileIfNotExist(path, filename);
+    await fs.promises.writeFile(newPath, JSON.stringify(data, null, 2), "utf8");
   } catch (err) {
     console.error(err);
   }
@@ -34,21 +61,6 @@ async function appendToFile(
     fs.appendFileSync(newPath, data);
   } catch (err) {
     console.error(err);
-  }
-}
-
-function createFolderIfNotExist(path: string) {
-  if (!fs.existsSync(path)) {
-    fs.mkdirSync(path, { recursive: true });
-  }
-}
-
-function createFileIfNotExist(path: string, filename: string) {
-  createFolderIfNotExist(path);
-
-  const newPath = `${path}/${filename}`;
-  if (!fs.existsSync(newPath)) {
-    fs.writeFileSync(newPath, "[]");
   }
 }
 
@@ -114,4 +126,5 @@ export {
   getTimestamp,
   appendToJSONArray,
   readJson,
+  saveJson,
 };

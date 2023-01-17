@@ -1,5 +1,5 @@
 import { models } from "@/constants";
-import { gtp3Completion } from "@/openai";
+import { gpt3Completion } from "@/openai";
 import { readFile, appendToFile } from "./util/util";
 
 const BOT_NAME = "DALLA";
@@ -16,7 +16,7 @@ const dalla = async (): Promise<void> => {
   const prompt = await getPrompt();
   let response;
   try {
-    response = await gtp3Completion({
+    response = await gpt3Completion({
       prompt: `${prompt}\n\n:`,
       stop: ["\n\n"],
       temperature: 0.9,

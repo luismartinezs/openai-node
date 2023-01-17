@@ -1,7 +1,7 @@
 import "module-alias/register";
 
 import { models } from "@/constants";
-import { gtp3Completion, type Gtp3CompletionOptions } from "./openai";
+import { gpt3Completion, type gpt3CompletionOptions } from "./openai";
 
 function composePrompt(blocks: string[], separator = "\n\n"): string {
   return blocks.filter(Boolean).join(separator);
@@ -15,19 +15,19 @@ const getSummarizePromptParts = (input: string): string[] => [
 
 async function summarize(
   input: string,
-  options: Partial<Omit<Gtp3CompletionOptions, "prompt">> = {}
+  options: Partial<Omit<gpt3CompletionOptions, "prompt">> = {}
 ): Promise<string> {
   const prompt = composePrompt(getSummarizePromptParts(input), "\n\n");
 
-  const defaultGtp3CompletionOptions = {
+  const defaultgpt3CompletionOptions = {
     stop: ["<<END>>"],
     model: models.curie,
     temperature: 0.2,
     max_tokens: 1200,
   };
 
-  const summary = await gtp3Completion({
-    ...defaultGtp3CompletionOptions,
+  const summary = await gpt3Completion({
+    ...defaultgpt3CompletionOptions,
     ...options,
     prompt,
   });

@@ -6,7 +6,7 @@ import "module-alias/register";
 import {
   composePrompt,
   estimateTokenLength,
-  gtp3Completion,
+  gpt3Completion,
   summarize,
 } from "@/openai";
 import {
@@ -232,7 +232,7 @@ function dot(config: Partial<DotConfig> = {}) {
 
     setConversation([...conversation(), `USER: ${userInput}`]);
 
-    const response = await gtp3Completion(
+    const response = await gpt3Completion(
       {
         prompt,
         stop: [`${botName}:`, "USER:"],

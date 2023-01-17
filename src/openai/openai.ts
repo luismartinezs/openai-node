@@ -7,7 +7,7 @@ const configuration: Configuration = new Configuration({
 });
 const openai: OpenAIApi = new OpenAIApi(configuration);
 
-export interface Gtp3CompletionOptions {
+export interface gpt3CompletionOptions {
   prompt: string;
   stop?: string[];
   temperature?: number;
@@ -29,8 +29,8 @@ const defaultOtherOptions = {
   mock: false,
 };
 
-async function gtp3Completion(
-  openaiOptions: Gtp3CompletionOptions,
+async function gpt3Completion(
+  openaiOptions: gpt3CompletionOptions,
   otherOptions: OtherOptions = {}
 ): Promise<string | null> {
   const defaultOpenaiOptions = {
@@ -64,15 +64,15 @@ async function gtp3Completion(
 }
 
 interface Gpt3EmbeddingOptions {
-  input: string | string[];
   model?: ModelTypes;
   user?: string;
 }
 
 async function gpt3Embedding(
-  openaiOptions: Gpt3EmbeddingOptions,
+  input: string,
+  openaiOptions: Gpt3EmbeddingOptions = {},
   otherOptions: OtherOptions = {}
-): Promise<number[][] | null> {
+): Promise<number[]> {
   const defaultOpenaiOptions = {
     model: models.adaEmbedding,
     user: "dev",
@@ -82,16 +82,16 @@ async function gpt3Embedding(
   const { mock } = { ...defaultOtherOptions, ...otherOptions };
 
   if (mock) {
-    return [[1, 2, 3, 4, 5]];
+    return [1, 2, 3, 4, 5];
   }
   try {
-    const embedding = await openai.createEmbedding(options);
+    const embedding = await openai.createEmbedding({ input, ...options });
 
-    return embedding?.data?.data.map((d) => d.embedding) || null;
+    return embedding?.data?.data[0].embedding || null;
   } catch (err) {
     console.error(err);
   }
-  return null;
+  return [];
 }
 
-export { gtp3Completion, gpt3Embedding };
+export { gpt3Completion, gpt3Embedding };

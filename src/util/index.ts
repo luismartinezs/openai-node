@@ -6,6 +6,7 @@ import {
   getTimestamp,
   appendToJSONArray,
   readJson,
+  saveJson,
 } from "./util";
 import { makeLog, debugLog } from "./log";
 import { cleanText } from "./parse";
@@ -17,6 +18,7 @@ export {
   appendToFile,
   appendToJSONArray,
   readJson,
+  saveJson,
   getUserInput,
   cleanText,
   getTimestamp,
