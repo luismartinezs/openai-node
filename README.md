@@ -22,11 +22,11 @@ pnpm oct
 
 ## Bots
 
-- Nemo: a very dumb bot with zero memory, ask it anything.
-- Dalla: a prompt generator for ai image generation tools such as Midjourney. It uses the davinci model because cheaper models won't work at all.
-- Hal: a bot with short memory (it remembers up to the last 10 answers). Quitting will reset the memory.
-- Dot: bot with limited memory (it remembers the last 4 answers and a summary of the rest of the conversation). Quitting will reset the memory.
-- Oct: Long term memory bot, it uses embeddings and summarization to include info related to the current prompt. Quitting does NOT reset the memory. Pretty much [LongtermChatExternalSources repo](https://github.com/daveshap/LongtermChatExternalSources) converted to NodeJS
+- Nemo: A very dumb bot with zero memory, ask it anything.
+- Dalla: A prompt generator for ai image generation tools such as Midjourney. It uses the davinci model because cheaper models won't work at all.
+- Hal: A rather unfriendly bot with short memory (it remembers up to the last 10 answers). Quitting will reset the memory.
+- Dot: Bot with limited memory (it remembers the last 4 answers and a summary of the rest of the conversation). Quitting will reset the memory.
+- Oct: Pretty smart, long term memory bot, it uses embeddings and summarization to include info related to the current prompt. Quitting does NOT reset the memory. Pretty much [LongtermChatExternalSources repo](https://github.com/daveshap/LongtermChatExternalSources) converted to NodeJS.
 
 ## Dev tasks
 
