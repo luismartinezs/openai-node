@@ -12,7 +12,7 @@ import { models, type ModelTypes } from "@/constants";
 type OctConfig = {
   botName: string;
   userName: string;
-  pathName: string;
+  logsPathName: string;
   embeddingModel: ModelTypes;
   summarizationModel: ModelTypes;
 };
@@ -33,11 +33,17 @@ function oct(config: Partial<OctConfig> = {}) {
   const defaultConfig = {
     botName: "OCT",
     userName: "USER",
-    pathName: "oct_chat_logs",
+    logsPathName: "oct_chat_logs",
     embeddingModel: models["adaEmbedding"],
     summarizationModel: models["davinci"],
   };
-  const { botName, userName, pathName, summarizationModel, embeddingModel } = {
+  const {
+    botName,
+    userName,
+    logsPathName,
+    summarizationModel,
+    embeddingModel,
+  } = {
     ...defaultConfig,
     ...config,
   };
@@ -58,7 +64,7 @@ function oct(config: Partial<OctConfig> = {}) {
 
   async function loadConversation(): Promise<Log[]> {
     try {
-      const files = await fs.promises.readdir(pathName);
+      const files = await fs.promises.readdir(logsPathName);
       const jsonFiles = files.filter(
         (file: string) => path.extname(file) === ".json"
       );
@@ -66,7 +72,7 @@ function oct(config: Partial<OctConfig> = {}) {
       const result = [];
       for (const file of jsonFiles) {
         const data = JSON.parse(
-          await fs.promises.readFile(path.join(pathName, file), "utf-8")
+          await fs.promises.readFile(path.join(logsPathName, file), "utf-8")
         );
         result.push(data);
       }
@@ -143,7 +149,7 @@ function oct(config: Partial<OctConfig> = {}) {
       vector: inputVector,
     };
     const filename = `log-${getTimestamp()}-${userName}.json`;
-    saveJson<Log>(pathName, filename, info);
+    saveJson<Log>(logsPathName, filename, info);
     // load conversation
     const conversation = await loadConversation();
     // Compose corpus (fetch memories, etc)
@@ -173,7 +179,7 @@ function oct(config: Partial<OctConfig> = {}) {
       vector: outputVector,
     };
     const outputFilename = `log-${getTimestamp()}-${botName}.json`;
-    saveJson<Log>(pathName, outputFilename, outputInfo);
+    saveJson<Log>(logsPathName, outputFilename, outputInfo);
     console.log(`\n\n${botName}: ${output}`);
   }
 
