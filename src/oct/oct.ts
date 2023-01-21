@@ -171,7 +171,6 @@ function oct(config: Partial<OctConfig> = {}) {
   }
 
   async function handleConversation() {
-    // handle user input
     const userInput = await getUserInput(`\n\n${userName}: `);
     const inputVector = await gpt3Embedding(userInput, {
       model: embeddingModel,
