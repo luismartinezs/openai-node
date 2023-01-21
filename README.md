@@ -38,4 +38,4 @@ pnpm oct
 - [x] Add eslint and prettier
 - [x] It keeps a summary of the history and prepends it to input
 - [x] It searches related history entries using embedding and prepends it to prompt, it saves embeddings to log so it's persistent
-- [ ] Refactoring, cleanup
+- [x] Refactoring, cleanup
