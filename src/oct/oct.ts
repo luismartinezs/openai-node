@@ -106,6 +106,8 @@ function oct(config: Partial<OctConfig> = {}) {
     return sortedOldestFirst;
   }
 
+  // pull episodic memories from the conversation
+  // TODO - fetch declarative memories (facts, wikis, KB, company data, internet, etc)
   function fetchMemories(
     vector: number[],
     logs: Log[],
@@ -165,54 +167,73 @@ function oct(config: Partial<OctConfig> = {}) {
   function getLastMessages(conversation: Log[], limit: number): string {
     return conversation
       .slice(-limit)
-      .map((log: any) => `${log.speaker}: ${log.message}`)
+      .map((log) => `${log.speaker}: ${log.message}`)
       .join("\n\n")
       .trim();
   }
 
-  async function handleConversation() {
-    const userInput = await getUserInput(`\n\n${userName}: `);
-    const inputVector = await gpt3Embedding(userInput, {
+  async function handleEmbedding(
+    input: string,
+    speaker: string
+  ): Promise<number[]> {
+    const inputVector = await gpt3Embedding(input, {
       model: embeddingModel,
     });
+    const time = getTimestamp();
     const info: Log = {
       uuid: uuid(),
-      time: Date.now(),
-      speaker: userName,
-      message: userInput,
+      time: Number(time),
+      speaker,
+      message: input,
       vector: inputVector,
     };
-    const filename = `log-${getTimestamp()}-${userName}.json`;
+    const filename = `log-${time}-${speaker}.json`;
     saveJson<Log>(logsPathName, filename, info);
-    const conversation = await loadConversation();
-    // Compose corpus (fetch memories, etc)
-    const memories = fetchMemories(inputVector, conversation, 10); // pull episodic memories
-    // TODO - fetch declarative memories (facts, wikis, KB, company data, internet, etc)
-    const notes = (await summarizeMemories(memories)) || "";
-    const lastMessages = getLastMessages(conversation, 10);
-    const prompt =
-      (await readFile("prompts/oct_response.txt"))
-        ?.replace("<<NOTES>>", notes)
-        .replace("<<CONVERSATION>>", lastMessages) || "";
-    const output = await gpt3Completion({
+    return inputVector;
+  }
+
+  async function buildConversationPrompt(replacements: [string, string][]) {
+    let rawPrompt = await readFile("prompts/oct_response.txt");
+
+    if (typeof rawPrompt === "string") {
+      replacements.forEach(([key, value]) => {
+        rawPrompt = (rawPrompt as string).replace(key, value);
+      });
+    } else {
+      throw new Error("Could not read conversation prompt");
+    }
+
+    return rawPrompt;
+  }
+
+  async function getOutput(prompt: string) {
+    return gpt3Completion({
       prompt,
       model: summarizationModel,
       stop: [`${botName}:`, `${userName}:`],
-      user: "oct-chatbot",
+      user: gpt3User,
     });
-    if (!output) {
-      throw new Error("Could not generate output");
+  }
+
+  async function handleConversation() {
+    const userInput = await getUserInput(`\n\n${userName}: `);
+    const inputVector = await handleEmbedding(userInput, userName);
+    const conversation = await loadConversation();
+    const memories = fetchMemories(inputVector, conversation, 10);
+    const notes = (await summarizeMemories(memories)) || "";
+    const lastMessages = getLastMessages(conversation, 10);
+    const prompt = await buildConversationPrompt([
+      ["<<NOTES>>", notes],
+      ["<<CONVERSATION>>", lastMessages],
+    ]);
+    const output = await getOutput(prompt);
+
+    if (output) {
+      handleEmbedding(output, botName);
+    } else {
+      throw new Error("Could not generate a response from GPT-3");
     }
-    const outputVector = await gpt3Embedding(output, { model: embeddingModel });
-    const outputInfo: Log = {
-      uuid: uuid(),
-      time: Date.now(),
-      speaker: botName,
-      message: output,
-      vector: outputVector,
-    };
-    const outputFilename = `log-${getTimestamp()}-${botName}.json`;
-    saveJson<Log>(logsPathName, outputFilename, outputInfo);
+
     console.log(`\n\n${botName}: ${output}`);
   }
 

@@ -114,8 +114,7 @@ async function getUserInput(question: string): Promise<string> {
 }
 
 function getTimestamp() {
-  const date: Date = new Date();
-  return date.toISOString().replace(/[-T:]/g, "").replace(/\..+/, "");
+  return Date.now();
 }
 
 export {
