@@ -159,6 +159,9 @@ function oct(config: Partial<OctConfig> = {}) {
   }
 
   async function init() {
+    console.log(
+      `Welcome to ${botName}, the OpenAI Chatbot. Ask it anything! ${botName} keeps memories of previous conversations`
+    );
     while (true) {
       await handleConversation();
     }
