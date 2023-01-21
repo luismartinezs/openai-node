@@ -20,6 +20,7 @@ type OctConfig = {
   logsPathName: string;
   embeddingModel: ModelTypes;
   summarizationModel: ModelTypes;
+  gpt3User: string;
 };
 
 export type Log = {
@@ -41,6 +42,7 @@ function oct(config: Partial<OctConfig> = {}) {
     logsPathName: "oct_chat_logs",
     embeddingModel: models["adaEmbedding"],
     summarizationModel: models["davinci"],
+    gpt3User: "oct-chatbot",
   };
   const {
     botName,
@@ -48,6 +50,7 @@ function oct(config: Partial<OctConfig> = {}) {
     logsPathName,
     summarizationModel,
     embeddingModel,
+    gpt3User,
   } = {
     ...defaultConfig,
     ...config,
@@ -125,28 +128,38 @@ function oct(config: Partial<OctConfig> = {}) {
       .slice(0, count);
   }
 
-  async function summarizeMemories(memories: Memory[]): Promise<string | null> {
-    const _memories = memories.sort((a, b) => a.time - b.time);
-    let block = "";
-    for (const mem of _memories) {
-      block += `${mem.speaker}: ${mem.message}\n\n`;
-    }
-    block = block.trim();
-    let prompt = await readFile("prompts/oct_notes.txt");
-    if (prompt) {
-      prompt = prompt.replace("<<INPUT>>", block);
+  function buildPrompt(promptHeader: string | null, block: string): string {
+    if (promptHeader) {
+      return promptHeader.replace("<<INPUT>>", block);
     } else {
-      // TODO this is ugly, refactor
-      throw new Error("Could not read prompt file");
+      return block;
     }
-    // TODO - do this in the background over time to handle huge amounts of memories
-    const notes = await gpt3Completion({
+  }
+
+  function parseMemories(memories: Memory[]): string {
+    return memories
+      .map((mem) => `${mem.speaker}: ${mem.message}`)
+      .join("\n\n")
+      .trim();
+  }
+
+  async function getPromptHeader(): Promise<string | null> {
+    return await readFile("prompts/oct_notes.txt");
+  }
+
+  async function summarizeMemories(memories: Memory[]): Promise<string | null> {
+    const parsedMemories = await parseMemories(
+      memories.sort((a, b) => a.time - b.time)
+    );
+    const promptHeader = await getPromptHeader();
+    const prompt = buildPrompt(promptHeader, parsedMemories);
+
+    return gpt3Completion({
       prompt,
       model: summarizationModel,
       stop: [`${botName}:`, `${userName}:`],
-      user: "oct-chatbot",
+      user: gpt3User,
     });
-    return notes;
   }
 
   function getLastMessages(conversation: Log[], limit: number): string {
@@ -172,7 +185,6 @@ function oct(config: Partial<OctConfig> = {}) {
     };
     const filename = `log-${getTimestamp()}-${userName}.json`;
     saveJson<Log>(logsPathName, filename, info);
-    // load conversation
     const conversation = await loadConversation();
     // Compose corpus (fetch memories, etc)
     const memories = fetchMemories(inputVector, conversation, 10); // pull episodic memories
