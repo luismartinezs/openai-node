@@ -1,49 +1,51 @@
 import "module-alias/register";
-const fs = require("fs");
-const path = require("path");
 import { v4 as uuid } from "uuid";
-const isEqual = require("lodash.isequal");
 
 import { gpt3Embedding, gpt3Completion } from "@/openai";
+import { getTimestamp, getUserInput, readFile, saveJson } from "@/util";
+import { models } from "@/constants";
+
 import {
-  getTimestamp,
-  getUserInput,
-  readFile,
-  saveJson,
-  dotProduct,
-} from "@/util";
-import { models, type ModelTypes } from "@/constants";
+  parseJsonFilesToLogs,
+  fetchMemories,
+  loadJsonLogFiles,
+  buildPrompt,
+  parseMemories,
+  getLastMessages,
+} from "./util";
+import { Log, Memory, OctConfig } from "./types";
 
-type OctConfig = {
-  botName: string;
-  userName: string;
-  logsPathName: string;
-  embeddingModel: ModelTypes;
-  summarizationModel: ModelTypes;
-  gpt3User: string;
+const defaultConfig = {
+  botName: "OCT",
+  userName: "USER",
+  logsPathName: "oct_chat_logs",
+  summarizationPromptPathName: "prompts/oct_notes.txt",
+  convoPromptPathName: "prompts/oct_response.txt",
+  embeddingModel: models.adaEmbedding,
+  summarizationModel: models.davinci,
+  gpt3User: "oct-chatbot",
 };
 
-export type Log = {
-  uuid: string;
-  time: number;
-  message: string;
-  vector: number[];
-  speaker: string;
-};
-
-type WithScore<T> = T & { score: number };
-
-type Memory = WithScore<Log>;
-
+/**
+ * Config:
+ *
+ * botName: The name of the bot, default: OCT
+ *
+ * userName: The name of the user, default: USER
+ *
+ * logsPathName: The path to the directory containing the chat logs, default: oct_chat_logs
+ *
+ * summarizationPromptPathName: The path to the file containing the prompt for the summarization model, default: prompts/oct_notes.txt
+ *
+ * convoPromptPathName: The path to the file containing the prompt for the conversation model, default: prompts/oct_response.txt
+ *
+ * embeddingModel: The model to use for embedding, default: text-embedding-ada-002
+ *
+ * summarizationModel: The model to use for summarization, default: text-davinci-003
+ *
+ * gpt3User: The user to use for the GPT-3 API, default: oct-chatbot
+ */
 function oct(config: Partial<OctConfig> = {}) {
-  const defaultConfig = {
-    botName: "OCT",
-    userName: "USER",
-    logsPathName: "oct_chat_logs",
-    embeddingModel: models["adaEmbedding"],
-    summarizationModel: models["davinci"],
-    gpt3User: "oct-chatbot",
-  };
   const {
     botName,
     userName,
@@ -51,54 +53,16 @@ function oct(config: Partial<OctConfig> = {}) {
     summarizationModel,
     embeddingModel,
     gpt3User,
+    summarizationPromptPathName,
+    convoPromptPathName,
   } = {
     ...defaultConfig,
     ...config,
   };
 
-  function similarity(v1: number[], v2: number[]): number {
-    return dotProduct(v1, v2);
-  }
-
-  async function loadJsonFiles(): Promise<string[]> {
-    try {
-      const files = await fs.promises.readdir(logsPathName);
-      return files.filter((file: string) => path.extname(file) === ".json");
-    } catch (err) {
-      console.error("Could not read logs directory", err);
-      return [];
-    }
-  }
-
-  function isLog(data: unknown): data is Log {
-    const requiredProperties = ["uuid", "time", "message", "vector", "speaker"];
-    return requiredProperties.every((prop) =>
-      Object.prototype.hasOwnProperty.call(data, prop)
-    );
-  }
-
-  async function parseJsonFilesToLogs(jsonData: string[]): Promise<Log[]> {
-    const result: Log[] = [];
-
-    for (const file of jsonData) {
-      try {
-        const data = JSON.parse(
-          await fs.promises.readFile(path.join(logsPathName, file), "utf-8")
-        );
-        if (isLog(data)) {
-          result.push(data);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    return result;
-  }
-
   async function loadConversation(): Promise<Log[]> {
-    const jsonFiles = await loadJsonFiles();
-    const logs = await parseJsonFilesToLogs(jsonFiles);
+    const jsonFiles = await loadJsonLogFiles(logsPathName);
+    const logs = await parseJsonFilesToLogs(jsonFiles, logsPathName);
 
     const sortedOldestFirst = logs.sort(
       (a, b) => Number(a.time) - Number(b.time)
@@ -106,53 +70,12 @@ function oct(config: Partial<OctConfig> = {}) {
     return sortedOldestFirst;
   }
 
-  // pull episodic memories from the conversation
-  // TODO - fetch declarative memories (facts, wikis, KB, company data, internet, etc)
-  function fetchMemories(
-    vector: number[],
-    logs: Log[],
-    count: number
-  ): Memory[] {
-    if (vector.length === 0) {
-      throw new Error("vector must not be empty");
-    }
-    if (count < 1) {
-      throw new Error("count must be positive");
-    }
-
-    return logs
-      .filter((log) => !isEqual(vector, log.vector))
-      .map((log) => {
-        const score = similarity(log.vector, vector);
-        return { ...log, time: Number(log.time), score };
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, count);
-  }
-
-  function buildPrompt(promptHeader: string | null, block: string): string {
-    if (promptHeader) {
-      return promptHeader.replace("<<INPUT>>", block);
-    } else {
-      return block;
-    }
-  }
-
-  function parseMemories(memories: Memory[]): string {
-    return memories
-      .map((mem) => `${mem.speaker}: ${mem.message}`)
-      .join("\n\n")
-      .trim();
-  }
-
   async function getPromptHeader(): Promise<string | null> {
-    return await readFile("prompts/oct_notes.txt");
+    return await readFile(summarizationPromptPathName);
   }
 
   async function summarizeMemories(memories: Memory[]): Promise<string | null> {
-    const parsedMemories = await parseMemories(
-      memories.sort((a, b) => a.time - b.time)
-    );
+    const parsedMemories = await parseMemories(memories);
     const promptHeader = await getPromptHeader();
     const prompt = buildPrompt(promptHeader, parsedMemories);
 
@@ -162,14 +85,6 @@ function oct(config: Partial<OctConfig> = {}) {
       stop: [`${botName}:`, `${userName}:`],
       user: gpt3User,
     });
-  }
-
-  function getLastMessages(conversation: Log[], limit: number): string {
-    return conversation
-      .slice(-limit)
-      .map((log) => `${log.speaker}: ${log.message}`)
-      .join("\n\n")
-      .trim();
   }
 
   async function handleEmbedding(
@@ -187,13 +102,14 @@ function oct(config: Partial<OctConfig> = {}) {
       message: input,
       vector: inputVector,
     };
-    const filename = `log-${time}-${speaker}.json`;
-    saveJson<Log>(logsPathName, filename, info);
+
+    saveJson<Log>(logsPathName, `log-${time}-${speaker}.json`, info);
+
     return inputVector;
   }
 
   async function buildConversationPrompt(replacements: [string, string][]) {
-    let rawPrompt = await readFile("prompts/oct_response.txt");
+    let rawPrompt = await readFile(convoPromptPathName);
 
     if (typeof rawPrompt === "string") {
       replacements.forEach(([key, value]) => {
@@ -215,20 +131,25 @@ function oct(config: Partial<OctConfig> = {}) {
     });
   }
 
-  async function handleConversation() {
-    const userInput = await getUserInput(`\n\n${userName}: `);
+  async function handlePrompt(userInput: string) {
     const inputVector = await handleEmbedding(userInput, userName);
     const conversation = await loadConversation();
     const memories = fetchMemories(inputVector, conversation, 10);
     const notes = (await summarizeMemories(memories)) || "";
     const lastMessages = getLastMessages(conversation, 10);
-    const prompt = await buildConversationPrompt([
+
+    return buildConversationPrompt([
       ["<<NOTES>>", notes],
       ["<<CONVERSATION>>", lastMessages],
     ]);
+  }
+
+  async function handleConversation() {
+    const userInput = await getUserInput(`\n\n${userName}: `);
+    const prompt = await handlePrompt(userInput);
     const output = await getOutput(prompt);
 
-    if (output) {
+    if (typeof output === "string") {
       handleEmbedding(output, botName);
     } else {
       throw new Error("Could not generate a response from GPT-3");
