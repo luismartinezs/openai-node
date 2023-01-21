@@ -1,12 +1,17 @@
 import "module-alias/register";
 const fs = require("fs");
 const path = require("path");
-import { dot, norm } from "mathjs";
 import { v4 as uuid } from "uuid";
 const isEqual = require("lodash.isequal");
 
 import { gpt3Embedding, gpt3Completion } from "@/openai";
-import { getTimestamp, getUserInput, readFile, saveJson } from "@/util";
+import {
+  getTimestamp,
+  getUserInput,
+  readFile,
+  saveJson,
+  dotProduct,
+} from "@/util";
 import { models, type ModelTypes } from "@/constants";
 
 type OctConfig = {
@@ -48,43 +53,54 @@ function oct(config: Partial<OctConfig> = {}) {
     ...config,
   };
 
-  function dotProduct(vector1: number[], vector2: number[]): number {
-    if (vector1.length !== vector2.length) {
-      throw new Error("Vectors must have the same length");
-    }
-    return (
-      dot(vector1, vector2) /
-      ((norm(vector1) as number) * (norm(vector2) as number))
-    );
-  }
-
   function similarity(v1: number[], v2: number[]): number {
     return dotProduct(v1, v2);
   }
 
-  async function loadConversation(): Promise<Log[]> {
+  async function loadJsonFiles(): Promise<string[]> {
     try {
       const files = await fs.promises.readdir(logsPathName);
-      const jsonFiles = files.filter(
-        (file: string) => path.extname(file) === ".json"
-      );
+      return files.filter((file: string) => path.extname(file) === ".json");
+    } catch (err) {
+      console.error("Could not read logs directory", err);
+      return [];
+    }
+  }
 
-      const result = [];
-      for (const file of jsonFiles) {
+  function isLog(data: unknown): data is Log {
+    const requiredProperties = ["uuid", "time", "message", "vector", "speaker"];
+    return requiredProperties.every((prop) =>
+      Object.prototype.hasOwnProperty.call(data, prop)
+    );
+  }
+
+  async function parseJsonFilesToLogs(jsonData: string[]): Promise<Log[]> {
+    const result: Log[] = [];
+
+    for (const file of jsonData) {
+      try {
         const data = JSON.parse(
           await fs.promises.readFile(path.join(logsPathName, file), "utf-8")
         );
-        result.push(data);
+        if (isLog(data)) {
+          result.push(data);
+        }
+      } catch (err) {
+        console.error(err);
       }
-
-      const sortedOldestFirst = result.sort(
-        (a, b) => Number(a.time) - Number(b.time)
-      );
-      return sortedOldestFirst;
-    } catch (err) {
-      console.error(err);
-      throw err;
     }
+
+    return result;
+  }
+
+  async function loadConversation(): Promise<Log[]> {
+    const jsonFiles = await loadJsonFiles();
+    const logs = await parseJsonFilesToLogs(jsonFiles);
+
+    const sortedOldestFirst = logs.sort(
+      (a, b) => Number(a.time) - Number(b.time)
+    );
+    return sortedOldestFirst;
   }
 
   function fetchMemories(
@@ -92,15 +108,21 @@ function oct(config: Partial<OctConfig> = {}) {
     logs: Log[],
     count: number
   ): Memory[] {
-    const scores: Memory[] = logs
+    if (vector.length === 0) {
+      throw new Error("vector must not be empty");
+    }
+    if (count < 1) {
+      throw new Error("count must be positive");
+    }
+
+    return logs
       .filter((log) => !isEqual(vector, log.vector))
       .map((log) => {
         const score = similarity(log.vector, vector);
         return { ...log, time: Number(log.time), score };
-      });
-    let ordered = scores.sort((a, b) => b.score - a.score);
-    ordered = ordered.slice(0, count);
-    return ordered;
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, count);
   }
 
   async function summarizeMemories(memories: Memory[]): Promise<string | null> {

@@ -11,6 +11,7 @@ import {
 import { makeLog, debugLog } from "./log";
 import { cleanText } from "./parse";
 import { useState } from "./state";
+import { dotProduct } from "./math";
 
 export {
   readFile,
@@ -25,4 +26,5 @@ export {
   makeLog,
   debugLog,
   useState,
+  dotProduct,
 };
