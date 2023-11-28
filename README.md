@@ -4,6 +4,14 @@ NodeJS scripts to interact with openai in different ways, mainly created as a wa
 
 Note: this is work in progress and mostly me playing around with the openai API
 
+## IMPORTANT
+
+- nemo = deprecated
+- dalla = deprecated
+- hal = deprecated
+- dot = deprecated
+- oct = deprecated
+
 ## Usage
 
 - Install node in your local machine
